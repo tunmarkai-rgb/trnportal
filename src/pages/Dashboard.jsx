@@ -14,6 +14,7 @@ const navItems = [
 
 export default function Dashboard() {
   const [memberName, setMemberName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
   const [calls, setCalls] = useState([])
   const navigate = useNavigate()
 
@@ -22,6 +23,7 @@ export default function Dashboard() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
+        setUserEmail(user.email)
         const { data: member } = await supabase
           .from('members')
           .select('full_name')
@@ -110,6 +112,28 @@ export default function Dashboard() {
             Your global real estate headquarters.
           </p>
         </div>
+
+        {/* Admin button — Jake only */}
+        {userEmail === 'jake@therealty-network.com' && (
+          <Link
+            to="/admin"
+            style={{
+              display: 'block',
+              width: '100%',
+              background: 'var(--gold)',
+              color: 'var(--bg-primary)',
+              textAlign: 'center',
+              padding: '0.875rem 2rem',
+              borderRadius: '0.75rem',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              letterSpacing: '0.04em',
+              marginBottom: '2.5rem',
+            }}
+          >
+            Admin Dashboard →
+          </Link>
+        )}
 
         {/* Nav Cards */}
         <p className="section-label">Quick Access</p>

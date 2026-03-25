@@ -82,6 +82,28 @@ client/
 - Close on X button or click outside overlay
 - Does NOT show: notes, status, bio
 
+## Jake Inline CRUD (jake@therealty-network.com only)
+All four content pages detect Jake's email via supabase.auth.getUser() and set isAdmin state.
+Regular members see NO add/edit/delete controls.
+
+- VideoLibrary.jsx: "+ Add Video" in nav, ✏/🗑 icons on thumbnail overlay (stopPropagation so video still plays), modal fields: title, category, host, date, duration, embed_url
+- UpcomingCalls.jsx: "+ Add Call" in nav, ✏/🗑 icons in top-right of each call card, modal fields: event_name, date, time, host, event_type, meeting_link, description, open_to
+- EducationHub.jsx: "+ Add Resource" in nav, ✏/🗑 icons at top of each resource card, modal fields: title, type, category, file_link, description
+- ReferralTemplates.jsx: "+ Add Template" in nav, ✏/🗑 icons inline with download button, modal fields: name, type, version, download_link
+- After save or delete, all pages reload from Supabase
+- Delete uses window.confirm() before executing
+- Edit pre-populates modal form with existing row data
+
+## YouTube URL Handling
+getEmbedUrl(url) and getVideoId(url) helpers exist in VideoLibrary.jsx and Admin.jsx.
+Handles: youtu.be/ID, youtube.com/watch?v=ID, youtube.com/embed/ID (pass-through).
+Video thumbnails use: https://img.youtube.com/vi/VIDEO_ID/mqdefault.jpg
+Admin.jsx Content tab shows 80x45px thumbnail preview column for videos section.
+
+## Supabase columns added (may need adding in dashboard)
+- upcoming_calls: description (text), open_to (text)
+- referral_templates: version (text)
+
 ## Rules
 - Mobile first, always
 - No separate backend server

@@ -2,26 +2,109 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const ADMIN_EMAIL = 'jake@therealty-network.com'
+const EMPTY_FORM = { title: '', type: '', category: '', file_link: '', description: '' }
+
+const inputStyle = {
+  background: 'var(--bg-primary)', border: '1px solid var(--border)',
+  color: 'var(--text-primary)', borderRadius: '0.4rem',
+  padding: '0.6rem 0.75rem', fontSize: '0.825rem',
+  fontFamily: 'var(--font-body)', outline: 'none', width: '100%',
+}
+
+const iconBtn = {
+  background: 'var(--bg-primary)', border: '1px solid var(--border)',
+  color: 'var(--text-muted)', width: '1.75rem', height: '1.75rem',
+  borderRadius: '0.35rem', cursor: 'pointer', display: 'flex',
+  alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem',
+}
+
+const MODAL_FIELDS = [
+  { key: 'title',       label: 'Title',       type: 'text' },
+  { key: 'type',        label: 'Type',        type: 'text', placeholder: 'e.g. Guide, Video, Template' },
+  { key: 'category',    label: 'Category',    type: 'text' },
+  { key: 'file_link',   label: 'File Link',   type: 'text' },
+  { key: 'description', label: 'Description', type: 'textarea' },
+]
+
 export default function EducationHub() {
   const [resources, setResources] = useState([])
   const [typeFilter, setTypeFilter] = useState('All')
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  const [showModal, setShowModal] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
-    supabase
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email === ADMIN_EMAIL) setIsAdmin(true)
+    }
+    init()
+    loadResources()
+  }, [])
+
+  async function loadResources() {
+    const { data, error } = await supabase
       .from('education_hub')
       .select('*')
       .order('title')
-      .then(({ data, error }) => {
-        if (error) { setFetchError(error.message); setLoading(false); return }
-        if (data) setResources(data)
-        setLoading(false)
-      })
-  }, [])
+    if (error) { setFetchError(error.message); setLoading(false); return }
+    if (data) setResources(data)
+    setLoading(false)
+  }
+
+  function openAdd() {
+    setEditingItem(null)
+    setForm(EMPTY_FORM)
+    setSaveError('')
+    setShowModal(true)
+  }
+
+  function openEdit(item) {
+    setEditingItem(item)
+    setForm({
+      title:       item.title       || '',
+      type:        item.type        || '',
+      category:    item.category    || '',
+      file_link:   item.file_link   || '',
+      description: item.description || '',
+    })
+    setSaveError('')
+    setShowModal(true)
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    setSaveError('')
+    if (editingItem) {
+      const { error } = await supabase.from('education_hub').update(form).eq('id', editingItem.id)
+      if (error) { setSaveError(error.message); setSaving(false); return }
+    } else {
+      const { error } = await supabase.from('education_hub').insert([form])
+      if (error) { setSaveError(error.message); setSaving(false); return }
+    }
+    setShowModal(false)
+    setSaving(false)
+    setLoading(true)
+    loadResources()
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this resource?')) return
+    setDeletingId(id)
+    await supabase.from('education_hub').delete().eq('id', id)
+    setDeletingId(null)
+    setResources(prev => prev.filter(r => r.id !== id))
+  }
 
   const types = ['All', ...new Set(resources.map(r => r.type).filter(Boolean).sort())]
-
   const filtered = typeFilter === 'All' ? resources : resources.filter(r => r.type === typeFilter)
 
   const pill = (active) => ({
@@ -53,7 +136,100 @@ export default function EducationHub() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Education Hub</span>
+        {isAdmin && (
+          <button
+            onClick={openAdd}
+            style={{
+              marginLeft: 'auto',
+              background: 'var(--gold)', color: 'var(--bg-primary)',
+              border: 'none', borderRadius: '0.4rem',
+              padding: '0.4rem 0.9rem', fontSize: '0.75rem',
+              fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)',
+            }}
+          >
+            + Add Resource
+          </button>
+        )}
       </nav>
+
+      {/* Add / Edit modal */}
+      {showModal && (
+        <div
+          onClick={() => setShowModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.88)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="card"
+            style={{ width: '100%', maxWidth: '480px', padding: '1.75rem', maxHeight: '90vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.05rem' }}>
+                {editingItem ? 'Edit Resource' : 'Add Resource'}
+              </p>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: 'transparent', border: '1px solid var(--border)',
+                  color: 'var(--text-muted)', width: '1.75rem', height: '1.75rem',
+                  borderRadius: '50%', cursor: 'pointer', fontSize: '0.9rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {MODAL_FIELDS.map(f => (
+                <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-body)' }}>{f.label}</label>
+                  {f.type === 'textarea' ? (
+                    <textarea
+                      rows={3}
+                      placeholder={f.placeholder || ''}
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder={f.placeholder || ''}
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            {saveError && (
+              <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: '#e05a5a10', border: '1px solid #e05a5a40', borderRadius: '0.4rem' }}>
+                <p style={{ color: '#e05a5a', fontSize: '0.8rem' }}>{saveError}</p>
+              </div>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                width: '100%', marginTop: '1.25rem',
+                background: saving ? 'var(--gold-dim)' : 'var(--gold)',
+                color: 'var(--bg-primary)', border: 'none',
+                borderRadius: '0.5rem', padding: '0.75rem',
+                fontSize: '0.875rem', fontWeight: 700,
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
 
@@ -78,6 +254,19 @@ export default function EducationHub() {
           <div className="nav-grid">
             {filtered.map(r => (
               <div key={r.id} className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+                {isAdmin && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                    <button onClick={() => openEdit(r)} style={iconBtn} title="Edit">✏</button>
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      disabled={deletingId === r.id}
+                      style={{ ...iconBtn, color: '#e05a5a' }}
+                      title="Delete"
+                    >
+                      {deletingId === r.id ? '…' : '🗑'}
+                    </button>
+                  </div>
+                )}
                 <div style={{ fontSize: '1.75rem', marginBottom: '0.75rem' }}>{typeIcon(r.type)}</div>
                 <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', lineHeight: 1.4 }}>
                   {r.title}

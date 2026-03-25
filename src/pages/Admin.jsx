@@ -10,6 +10,22 @@ const STATUS_COLOR = {
   rejected: '#e05a5a',
 }
 
+function getEmbedUrl(url) {
+  if (!url) return ''
+  if (url.includes('/embed/')) return url
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/)
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`
+  const watchMatch = url.match(/[?&]v=([^?&]+)/)
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`
+  return url
+}
+
+function getVideoId(url) {
+  const embed = getEmbedUrl(url)
+  const match = embed.match(/\/embed\/([^?&/]+)/)
+  return match ? match[1] : null
+}
+
 const DEAL_STAGES = [
   'Lead', 'Prospect', 'Active', 'Negotiating',
   'Under Contract', 'Closed', 'Commission Collected', 'Dead',
@@ -455,6 +471,7 @@ export default function Admin() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
                   <thead>
                     <tr>
+                      {contentSection === 'videos' && <th style={TH}>Preview</th>}
                       {cfg.columns.map(c => (
                         <th key={c} style={TH}>{c.replace(/_/g, ' ')}</th>
                       ))}
@@ -464,12 +481,23 @@ export default function Admin() {
                   <tbody>
                     {currentContent.length === 0 ? (
                       <tr>
-                        <td colSpan={cfg.columns.length + 1} style={{ ...TD, textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <td colSpan={cfg.columns.length + 1 + (contentSection === 'videos' ? 1 : 0)} style={{ ...TD, textAlign: 'center', color: 'var(--text-muted)' }}>
                           No entries yet. Click + Add to create one.
                         </td>
                       </tr>
                     ) : currentContent.map(row => (
                       <tr key={row.id} style={{ background: 'var(--bg-card)' }}>
+                        {contentSection === 'videos' && (
+                          <td style={TD}>
+                            {getVideoId(row.embed_url) ? (
+                              <img
+                                src={`https://img.youtube.com/vi/${getVideoId(row.embed_url)}/mqdefault.jpg`}
+                                alt=""
+                                style={{ width: '80px', height: '45px', objectFit: 'cover', borderRadius: '0.3rem', display: 'block' }}
+                              />
+                            ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>}
+                          </td>
+                        )}
                         {cfg.columns.map((col, i) => (
                           <td key={col} style={{
                             ...TD,

@@ -8,14 +8,16 @@ export default function MemberDirectory() {
   const [country, setCountry] = useState('All')
   const [niche, setNiche] = useState('All')
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     supabase
       .from('members')
-      .select('id, full_name, country, city, role, niche, bio')
+      .select('id, full_name, country, city, role, niche, status')
       .eq('status', 'approved')
       .order('full_name')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setFetchError(error.message); setLoading(false); return }
         if (data) setMembers(data)
         setLoading(false)
       })
@@ -96,6 +98,10 @@ export default function MemberDirectory() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading members…</p>
+        ) : fetchError ? (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <p style={{ color: '#e05a5a', fontSize: '0.875rem' }}>{fetchError}</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No members found.</p>
@@ -131,11 +137,6 @@ export default function MemberDirectory() {
                       }}>{n}</span>
                     ))}
                   </div>
-                )}
-                {m.bio && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.72rem', lineHeight: 1.5 }}>
-                    {m.bio.length > 120 ? m.bio.slice(0, 120) + '…' : m.bio}
-                  </p>
                 )}
               </div>
             ))}

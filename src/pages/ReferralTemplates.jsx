@@ -6,13 +6,15 @@ export default function ReferralTemplates() {
   const [templates, setTemplates] = useState([])
   const [typeFilter, setTypeFilter] = useState('All')
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     supabase
       .from('referral_templates')
       .select('*')
       .order('name')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setFetchError(error.message); setLoading(false); return }
         if (data) setTemplates(data)
         setLoading(false)
       })
@@ -60,14 +62,18 @@ export default function ReferralTemplates() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading templates…</p>
+        ) : fetchError ? (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <p style={{ color: '#e05a5a', fontSize: '0.875rem' }}>{fetchError}</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No templates found.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {filtered.map((t, i) => (
-              <div key={i} className="card" style={{
+            {filtered.map(t => (
+              <div key={t.id} className="card" style={{
                 padding: '1rem 1.25rem',
                 display: 'flex', alignItems: 'center',
                 justifyContent: 'space-between', gap: '1rem',

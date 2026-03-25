@@ -6,13 +6,15 @@ export default function EducationHub() {
   const [resources, setResources] = useState([])
   const [typeFilter, setTypeFilter] = useState('All')
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     supabase
       .from('education_hub')
       .select('*')
       .order('title')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setFetchError(error.message); setLoading(false); return }
         if (data) setResources(data)
         setLoading(false)
       })
@@ -64,14 +66,18 @@ export default function EducationHub() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading resources…</p>
+        ) : fetchError ? (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <p style={{ color: '#e05a5a', fontSize: '0.875rem' }}>{fetchError}</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No resources found.</p>
           </div>
         ) : (
           <div className="nav-grid">
-            {filtered.map((r, i) => (
-              <div key={i} className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            {filtered.map(r => (
+              <div key={r.id} className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ fontSize: '1.75rem', marginBottom: '0.75rem' }}>{typeIcon(r.type)}</div>
                 <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem', lineHeight: 1.4 }}>
                   {r.title}

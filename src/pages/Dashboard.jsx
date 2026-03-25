@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [memberName, setMemberName] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [calls, setCalls] = useState([])
+  const [callsLoading, setCallsLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function Dashboard() {
         .order('date', { ascending: true })
         .limit(3)
       if (upcomingCalls) setCalls(upcomingCalls)
+      setCallsLoading(false)
     }
 
     loadData()
@@ -82,7 +84,7 @@ export default function Dashboard() {
 
         {/* Welcome Banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #1c1400 0%, var(--bg-card) 65%)',
+          background: 'linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-card) 65%)',
           border: '1px solid var(--gold-dim)',
           borderRadius: '1rem',
           padding: '2rem 1.75rem',
@@ -160,7 +162,9 @@ export default function Dashboard() {
         {/* Upcoming Calls */}
         <p className="section-label">Upcoming Calls</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '2.5rem' }}>
-          {calls.length === 0 ? (
+          {callsLoading ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading calls…</p>
+          ) : calls.length === 0 ? (
             <div className="card" style={{ padding: '1.25rem' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No upcoming calls scheduled.</p>
             </div>

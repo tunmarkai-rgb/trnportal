@@ -8,13 +8,15 @@ export default function DealFlow() {
   const [deals, setDeals] = useState([])
   const [tab, setTab] = useState('pipeline')
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     supabase
       .from('deals')
       .select('*')
       .order('deal_name')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setFetchError(error.message); setLoading(false); return }
         if (data) setDeals(data)
         setLoading(false)
       })
@@ -25,12 +27,12 @@ export default function DealFlow() {
   const visible = tab === 'pipeline' ? pipeline : closed
 
   const stageColor = (stage) => {
-    if (!stage) return 'var(--text-muted)'
+    if (!stage) return '#555555'
     const s = stage.toLowerCase()
     if (s.includes('closed') || s.includes('collected') || s.includes('completed')) return '#4caf50'
-    if (s.includes('active') || s.includes('negotiat')) return 'var(--gold)'
-    if (s.includes('prospect') || s.includes('lead')) return 'var(--text-secondary)'
-    return 'var(--text-secondary)'
+    if (s.includes('active') || s.includes('negotiat')) return '#d7a042'
+    if (s.includes('prospect') || s.includes('lead')) return '#888888'
+    return '#888888'
   }
 
   const tabStyle = (active) => ({
@@ -72,6 +74,10 @@ export default function DealFlow() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading deals…</p>
+        ) : fetchError ? (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <p style={{ color: '#e05a5a', fontSize: '0.875rem' }}>{fetchError}</p>
+          </div>
         ) : visible.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
@@ -80,8 +86,8 @@ export default function DealFlow() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {visible.map((deal, i) => (
-              <div key={i} className="card" style={{ padding: '1.1rem 1.25rem' }}>
+            {visible.map(deal => (
+              <div key={deal.id} className="card" style={{ padding: '1.1rem 1.25rem' }}>
 
                 {/* Deal name + stage */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>

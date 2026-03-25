@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 export default function UpcomingCalls() {
   const [calls, setCalls] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -13,7 +14,8 @@ export default function UpcomingCalls() {
       .select('*')
       .gte('date', today)
       .order('date', { ascending: true })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { setFetchError(error.message); setLoading(false); return }
         if (data) setCalls(data)
         setLoading(false)
       })
@@ -42,6 +44,10 @@ export default function UpcomingCalls() {
 
         {loading ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading calls…</p>
+        ) : fetchError ? (
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <p style={{ color: '#e05a5a', fontSize: '0.875rem' }}>{fetchError}</p>
+          </div>
         ) : calls.length === 0 ? (
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No upcoming calls scheduled.</p>

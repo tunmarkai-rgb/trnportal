@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 
 const STATUS_COLOR = {
   approved: '#4caf50',
-  pending:  'var(--gold)',
+  pending:  '#d7a042',
   rejected: '#e05a5a',
 }
 
@@ -21,12 +21,12 @@ const CONTENT_CONFIG = {
     label:   'Videos',
     columns: ['title', 'category', 'host', 'date', 'duration'],
     fields:  [
-      { key: 'title',     label: 'Title',              type: 'text' },
-      { key: 'category',  label: 'Category',           type: 'text' },
-      { key: 'host',      label: 'Host',               type: 'text' },
-      { key: 'date',      label: 'Date',               type: 'date' },
-      { key: 'duration',  label: 'Duration',           type: 'text', placeholder: 'e.g. 45 min' },
-      { key: 'embed_url', label: 'YouTube Embed URL',  type: 'text' },
+      { key: 'title',     label: 'Title',             type: 'text' },
+      { key: 'category',  label: 'Category',          type: 'text' },
+      { key: 'host',      label: 'Host',              type: 'text' },
+      { key: 'date',      label: 'Date',              type: 'date' },
+      { key: 'duration',  label: 'Duration',          type: 'text', placeholder: 'e.g. 45 min' },
+      { key: 'embed_url', label: 'YouTube Embed URL', type: 'text' },
     ],
   },
   calls: {
@@ -84,6 +84,12 @@ const TD = {
   verticalAlign: 'middle',
 }
 
+const ErrorCard = ({ message }) => (
+  <div className="card" style={{ padding: '1rem 1.25rem', borderColor: '#e05a5a40', background: '#e05a5a08' }}>
+    <p style={{ color: '#e05a5a', fontSize: '0.825rem' }}>{message}</p>
+  </div>
+)
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -93,21 +99,28 @@ export default function Admin() {
   const [members,        setMembers]        = useState([])
   const [memberFilter,   setMemberFilter]   = useState('all')
   const [membersLoading, setMembersLoading] = useState(true)
+  const [membersError,   setMembersError]   = useState(null)
   const [updatingMember, setUpdatingMember] = useState(null)
+  const [memberMutationError, setMemberMutationError] = useState('')
 
   // Content
   const [contentSection, setContentSection] = useState('videos')
   const [contentData,    setContentData]    = useState({ videos: [], calls: [], education: [], templates: [] })
   const [contentLoading, setContentLoading] = useState(false)
+  const [contentError,   setContentError]   = useState(null)
   const [showModal,      setShowModal]      = useState(false)
   const [newRow,         setNewRow]         = useState({})
   const [saving,         setSaving]         = useState(false)
+  const [saveError,      setSaveError]      = useState('')
   const [deletingId,     setDeletingId]     = useState(null)
+  const [contentMutationError, setContentMutationError] = useState('')
 
   // Deals
   const [deals,        setDeals]        = useState([])
   const [dealsLoading, setDealsLoading] = useState(false)
+  const [dealsError,   setDealsError]   = useState(null)
   const [updatingDeal, setUpdatingDeal] = useState(null)
+  const [dealMutationError, setDealMutationError] = useState('')
 
   // ── Data loaders ────────────────────────────────────────────────────────────
 
@@ -119,28 +132,32 @@ export default function Admin() {
   }, [tab, contentSection])
 
   async function loadMembers() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('members')
       .select('id, full_name, email, country, role, status')
       .order('full_name')
-    if (data) setMembers(data)
+    if (error) setMembersError(error.message)
+    else if (data) setMembers(data)
     setMembersLoading(false)
   }
 
   async function loadContent(section) {
     setContentLoading(true)
-    const { data } = await supabase
+    setContentError(null)
+    const { data, error } = await supabase
       .from(CONTENT_CONFIG[section].table)
       .select('*')
-      .order('id', { ascending: false })
-    if (data) setContentData(prev => ({ ...prev, [section]: data }))
+      .order('created_at', { ascending: false })
+    if (error) setContentError(error.message)
+    else if (data) setContentData(prev => ({ ...prev, [section]: data }))
     setContentLoading(false)
   }
 
   async function loadDeals() {
     setDealsLoading(true)
-    const { data } = await supabase.from('deals').select('*').order('deal_name')
-    if (data) setDeals(data)
+    const { data, error } = await supabase.from('deals').select('*').order('deal_name')
+    if (error) setDealsError(error.message)
+    else if (data) setDeals(data)
     setDealsLoading(false)
   }
 
@@ -148,37 +165,46 @@ export default function Admin() {
 
   async function updateMemberStatus(id, status) {
     setUpdatingMember(id)
+    setMemberMutationError('')
     const { error } = await supabase.from('members').update({ status }).eq('id', id)
     if (!error) setMembers(prev => prev.map(m => m.id === id ? { ...m, status } : m))
+    else setMemberMutationError(`Update failed: ${error.message}`)
     setUpdatingMember(null)
   }
 
   async function saveRow() {
     setSaving(true)
+    setSaveError('')
     const cfg = CONTENT_CONFIG[contentSection]
     const { data, error } = await supabase.from(cfg.table).insert([newRow]).select()
     if (!error && data) {
       setContentData(prev => ({ ...prev, [contentSection]: [data[0], ...prev[contentSection]] }))
       setShowModal(false)
       setNewRow({})
+    } else {
+      setSaveError(error?.message || 'Failed to save. Check required fields.')
     }
     setSaving(false)
   }
 
   async function deleteRow(id) {
     setDeletingId(id)
+    setContentMutationError('')
     const { error } = await supabase.from(CONTENT_CONFIG[contentSection].table).delete().eq('id', id)
     if (!error) setContentData(prev => ({
       ...prev,
       [contentSection]: prev[contentSection].filter(r => r.id !== id),
     }))
+    else setContentMutationError(`Delete failed: ${error.message}`)
     setDeletingId(null)
   }
 
   async function updateDealStage(id, stage) {
     setUpdatingDeal(id)
+    setDealMutationError('')
     const { error } = await supabase.from('deals').update({ stage }).eq('id', id)
     if (!error) setDeals(prev => prev.map(d => d.id === id ? { ...d, stage } : d))
+    else setDealMutationError(`Stage update failed: ${error.message}`)
     setUpdatingDeal(null)
   }
 
@@ -214,9 +240,10 @@ export default function Admin() {
     fontWeight: active ? 600 : 400, textTransform: 'capitalize',
   })
 
-  const actionBtn = (color, disabled) => ({
-    background: color + '18', color,
-    border: '1px solid ' + color + '40',
+  // hex colors only — no CSS variable refs, so opacity suffixes work
+  const actionBtn = (hexColor, disabled) => ({
+    background: hexColor + '18', color: hexColor,
+    border: '1px solid ' + hexColor + '40',
     padding: '0.25rem 0.7rem', borderRadius: '0.35rem',
     fontSize: '0.7rem', fontWeight: 600,
     cursor: disabled ? 'default' : 'pointer',
@@ -246,7 +273,7 @@ export default function Admin() {
 
       {/* ── Sticky nav ── */}
       <nav style={{
-        display: 'flex', alignItems: 'center', gap: '0.875rem',
+        display: 'flex', alignItems: 'center', gap: '0.875rem', flexWrap: 'wrap',
         padding: '0.875rem 1.5rem', borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-primary)',
       }}>
@@ -255,12 +282,6 @@ export default function Admin() {
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 600 }}>
           Admin Dashboard
         </span>
-        <span style={{
-          background: 'var(--gold-dim)', color: 'var(--gold)',
-          fontSize: '0.6rem', padding: '0.15rem 0.6rem',
-          borderRadius: '999px', letterSpacing: '0.06em',
-          fontWeight: 600, textTransform: 'uppercase',
-        }}>Jake Only</span>
         <Link
           to="/dashboard"
           style={{
@@ -292,7 +313,7 @@ export default function Admin() {
             <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
               {[
                 ['Total',    counts.all,      'var(--text-primary)'],
-                ['Pending',  counts.pending,  'var(--gold)'],
+                ['Pending',  counts.pending,  '#d7a042'],
                 ['Approved', counts.approved, '#4caf50'],
               ].map(([label, count, color]) => (
                 <div key={label} className="card" style={{ padding: '0.875rem 1.5rem', minWidth: '5.5rem', textAlign: 'center' }}>
@@ -315,8 +336,17 @@ export default function Admin() {
               ))}
             </div>
 
+            {/* Mutation error */}
+            {memberMutationError && (
+              <div style={{ marginBottom: '1rem' }}>
+                <ErrorCard message={memberMutationError} />
+              </div>
+            )}
+
             {membersLoading ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading members…</p>
+            ) : membersError ? (
+              <ErrorCard message={membersError} />
             ) : (
               <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '620px' }}>
@@ -344,9 +374,9 @@ export default function Admin() {
                           <span style={{
                             fontSize: '0.65rem', padding: '0.15rem 0.6rem',
                             borderRadius: '999px', textTransform: 'capitalize',
-                            color:       STATUS_COLOR[m.status] || 'var(--text-muted)',
-                            background: (STATUS_COLOR[m.status] || 'var(--border)') + '18',
-                            border: '1px solid ' + (STATUS_COLOR[m.status] || 'var(--border)') + '40',
+                            color:      STATUS_COLOR[m.status] || 'var(--text-muted)',
+                            background: (STATUS_COLOR[m.status] || '#888888') + '18',
+                            border: '1px solid ' + (STATUS_COLOR[m.status] || '#888888') + '40',
                           }}>{m.status}</span>
                         </td>
                         <td style={TD}>
@@ -361,7 +391,7 @@ export default function Admin() {
                             <button
                               onClick={() => updateMemberStatus(m.id, 'pending')}
                               disabled={m.status === 'pending' || updatingMember === m.id}
-                              style={actionBtn('var(--gold)', m.status === 'pending' || updatingMember === m.id)}
+                              style={actionBtn('#d7a042', m.status === 'pending' || updatingMember === m.id)}
                             >
                               {updatingMember === m.id ? '…' : 'Revoke'}
                             </button>
@@ -409,8 +439,17 @@ export default function Admin() {
               </button>
             </div>
 
+            {/* Mutation error */}
+            {contentMutationError && (
+              <div style={{ marginBottom: '1rem' }}>
+                <ErrorCard message={contentMutationError} />
+              </div>
+            )}
+
             {contentLoading ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</p>
+            ) : contentError ? (
+              <ErrorCard message={contentError} />
             ) : (
               <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '480px' }}>
@@ -465,8 +504,18 @@ export default function Admin() {
         {tab === 'deals' && (
           <>
             <p className="section-label">All Deals</p>
+
+            {/* Mutation error */}
+            {dealMutationError && (
+              <div style={{ marginBottom: '1rem' }}>
+                <ErrorCard message={dealMutationError} />
+              </div>
+            )}
+
             {dealsLoading ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading…</p>
+            ) : dealsError ? (
+              <ErrorCard message={dealsError} />
             ) : (
               <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
@@ -588,12 +637,19 @@ export default function Admin() {
               ))}
             </div>
 
-            {/* Save */}
+            {/* Save error */}
+            {saveError && (
+              <div style={{ marginTop: '1rem' }}>
+                <ErrorCard message={saveError} />
+              </div>
+            )}
+
+            {/* Save button */}
             <button
               onClick={saveRow}
               disabled={saving}
               style={{
-                width: '100%', marginTop: '1.5rem',
+                width: '100%', marginTop: '1.25rem',
                 background: saving ? 'var(--gold-dim)' : 'var(--gold)',
                 color: 'var(--bg-primary)', border: 'none',
                 borderRadius: '0.5rem', padding: '0.75rem',

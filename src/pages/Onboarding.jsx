@@ -61,7 +61,7 @@ export default function Onboarding() {
 
         {/* Hero */}
         <div style={{
-          background: 'linear-gradient(135deg, #1c1400 0%, var(--bg-card) 65%)',
+          background: 'linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-card) 65%)',
           border: '1px solid var(--gold-dim)',
           borderRadius: '1rem',
           padding: '2rem 1.75rem',

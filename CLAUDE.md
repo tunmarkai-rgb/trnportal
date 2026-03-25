@@ -40,19 +40,21 @@ client/
 - .card — dark card with border
 - .nav-grid — 2 col mobile, 3 col desktop
 - .nav-card — clickable navigation card
+- textarea::placeholder and textarea:focus styles match input equivalents
 
 ## Supabase Tables
 - members (full_name, email, country, city, role, niche[], status, avatar_url, agency, languages[], can_help_with, looking_for, whatsapp, instagram, linkedin, bio, notes)
 - videos (title, category, host, date, duration, embed_url)
-- upcoming_calls (event_name, date, time, host, event_type, meeting_link)
+- upcoming_calls (event_name, date, time, host, event_type, meeting_link, description, open_to)
 - education_hub (title, type, category, file_link, description)
-- referral_templates (name, type, download_link)
-- deals (deal_name, originating_agent, destination_agent, stage)
+- referral_templates (name, type, version, download_link)
+- deals (deal_name, originating_agent, originating_country, destination_agent, destination_country, property_type, property_value_min, property_value_max, commission_percent, stage, notes)
 
 ## Supabase Storage
 - Bucket: "avatars" — stores member profile photos
 - Public URL stored in members.avatar_url column
 - Files named by user ID: {user.id}.{ext}, uploaded with upsert: true
+- Avatar upload in Profile.jsx immediately saves avatar_url to members table (no need to click Save Profile for the photo alone)
 
 ## Routes
 /login — public
@@ -64,7 +66,7 @@ client/
 /templates — members
 /deals — admin only (jake@therealty-network.com); non-admins see access-restricted card
 /onboarding — members
-/profile — members (edit own profile + avatar upload)
+/profile — members (edit own profile + avatar upload); linked from Dashboard nav card
 /admin — Jake only
 
 ## Field Visibility Rules
@@ -81,22 +83,44 @@ client/
 - Fade-in animation via @keyframes fadeInUp injected via <style> tag
 - Close on X button or click outside overlay
 - Does NOT show: notes, status, bio
+- Member cards and modal both use 2-letter initials: split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
+
+## Dashboard (Dashboard.jsx)
+- userEmail initialises to null; nav-grid only renders after getUser() resolves (prevents Deal Flow card flash)
+- navItems includes: Member Directory, Video Library, Upcoming Calls, Education Hub, Referral Templates, Deal Flow (admin only), My Profile, Getting Started
+- Deal Flow card filtered out for non-admins: navItems.filter(item => item.path !== '/deals' || userEmail === ADMIN_EMAIL)
+- Dashboard upcoming calls select includes meeting_link; RSVP button opens meeting_link in new tab or navigates to /calls if no link
 
 ## Admin-only pages
 - /deals — DealFlow.jsx checks getUser() email; isAdmin=null shows loader, isAdmin=false shows restricted card with back link, isAdmin=true shows full tracker. Deals fetch is skipped entirely for non-admins.
-- Dashboard.jsx filters the Deal Flow nav card out of navItems for non-admin users (userEmail !== 'jake@therealty-network.com')
+- Dashboard.jsx filters the Deal Flow nav card out of navItems for non-admin users
 
 ## Jake Inline CRUD (jake@therealty-network.com only)
 All four content pages detect Jake's email via supabase.auth.getUser() and set isAdmin state.
 Regular members see NO add/edit/delete controls.
 
-- VideoLibrary.jsx: "+ Add Video" in nav, ✏/🗑 icons on thumbnail overlay (stopPropagation so video still plays), modal fields: title, category, host, date, duration, embed_url
-- UpcomingCalls.jsx: "+ Add Call" in nav, ✏/🗑 icons in top-right of each call card, modal fields: event_name, date, time, host, event_type, meeting_link, description, open_to
+- VideoLibrary.jsx: "+ Add Video" in nav, ✏/🗑 icons on thumbnail overlay (stopPropagation so video still plays), modal fields: title, category, host, date, duration, embed_url. Cards with no embed_url show "No video available" and are not clickable. Play overlay only renders when videoId is non-null.
+- UpcomingCalls.jsx: "+ Add Call" in nav, ✏/🗑 icons in top-right of each call card, modal fields: event_name, date, time, host, event_type, meeting_link, description, open_to. open_to displayed as grey pill badge on card next to event_type.
 - EducationHub.jsx: "+ Add Resource" in nav, ✏/🗑 icons at top of each resource card, modal fields: title, type, category, file_link, description
 - ReferralTemplates.jsx: "+ Add Template" in nav, ✏/🗑 icons inline with download button, modal fields: name, type, version, download_link
 - After save or delete, all pages reload from Supabase
 - Delete uses window.confirm() before executing
 - Edit pre-populates modal form with existing row data
+
+## Admin.jsx — Content Tab
+- CONTENT_CONFIG fields include all editable columns per section
+- calls fields: event_name, date, time, host, event_type, meeting_link, description (textarea), open_to
+- templates fields: name, type, version, download_link
+- educaton fields: title, type, category, file_link, description (textarea)
+- videos fields: title, category, host, date, duration, embed_url
+
+## Admin.jsx — Deals Tab
+- Lists all deals with stage dropdown (inline edit) and Delete button per row
+- "+ Add Deal" button opens modal with fields: deal_name, originating_agent, originating_country, destination_agent, destination_country, property_type, property_value_min (number), property_value_max (number), commission_percent (number), stage (select), notes (textarea)
+- DEAL_STAGES: Lead, Prospect, Active, Negotiating, Under Contract, Closed, Commission Collected, Completed, Dead
+- EMPTY_DEAL and DEAL_FIELDS constants defined at module level
+- saveDeal() inserts new row, prepends to state; deleteDeal() uses window.confirm()
+- DealFlow.jsx CLOSED_STAGES includes 'Completed' — matches Admin DEAL_STAGES
 
 ## YouTube URL Handling
 getEmbedUrl(url) and getVideoId(url) helpers exist in VideoLibrary.jsx and Admin.jsx.
@@ -104,9 +128,22 @@ Handles: youtu.be/ID, youtube.com/watch?v=ID, youtube.com/embed/ID (pass-through
 Video thumbnails use: https://img.youtube.com/vi/VIDEO_ID/mqdefault.jpg
 Admin.jsx Content tab shows 80x45px thumbnail preview column for videos section.
 
-## Supabase columns added (may need adding in dashboard)
+## Profile.jsx
+- Avatar upload immediately persists avatar_url to members table (no wait for Save Profile)
+- Banner shown after avatar upload: "Photo saved — click Save Profile to update your other details."
+- handleSave() uses .select() and checks data.length === 0 to detect missing member row
+- Error message for missing row: "Profile not found. Contact an administrator."
+- handleSave() clears avatarSaved banner on success
+
+## Onboarding.jsx
+- WHATSAPP_LINK is a placeholder: '#NOTE_FOR_JAKE_replace_with_real_whatsapp_link' — must be replaced
+- Step 01 has link: '/profile' and linkLabel: 'Update My Profile →'
+- Step renderer handles step.action === true by rendering <a> to WHATSAPP_LINK
+
+## Supabase columns required (add in dashboard if not present)
 - upcoming_calls: description (text), open_to (text)
 - referral_templates: version (text)
+- deals: originating_country (text), destination_country (text), property_type (text), property_value_min (numeric), property_value_max (numeric), commission_percent (numeric), notes (text)
 
 ## Rules
 - Mobile first, always

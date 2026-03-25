@@ -5,6 +5,8 @@ const steps = [
     number: '01',
     title: 'Complete Your Profile',
     desc: 'Make sure your full name, country, city, role, and niche are up to date so other members can find and connect with you.',
+    link: '/profile',
+    linkLabel: 'Update My Profile →',
   },
   {
     number: '02',
@@ -42,7 +44,8 @@ const steps = [
   },
 ]
 
-const WHATSAPP_LINK = 'https://chat.whatsapp.com/trn-members'
+// NOTE_FOR_JAKE: Replace this string with your real WhatsApp group invite URL
+const WHATSAPP_LINK = '#NOTE_FOR_JAKE_replace_with_real_whatsapp_link'
 
 export default function Onboarding() {
   return (
@@ -173,6 +176,11 @@ export default function Onboarding() {
                   <Link to={step.link} style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 600 }}>
                     {step.linkLabel}
                   </Link>
+                )}
+                {step.action && (
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 600 }}>
+                    Join WhatsApp Community →
+                  </a>
                 )}
               </div>
             </div>

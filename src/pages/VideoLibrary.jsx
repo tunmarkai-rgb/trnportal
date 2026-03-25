@@ -314,7 +314,7 @@ export default function VideoLibrary() {
                 <div
                   key={v.id}
                   className="card"
-                  onClick={() => setSelected(v)}
+                  onClick={() => v.embed_url && setSelected(v)}
                   style={{ cursor: 'pointer', overflow: 'hidden' }}
                 >
                   {/* Thumbnail */}
@@ -325,19 +325,23 @@ export default function VideoLibrary() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {videoId ? (
-                      <img
-                        src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
-                        alt={v.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : null}
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: 'rgba(0,0,0,0.22)',
-                    }}>
-                      <span style={{ fontSize: '1.5rem' }}>▶</span>
-                    </div>
+                      <>
+                        <img
+                          src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                          alt={v.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: 'rgba(0,0,0,0.22)',
+                        }}>
+                          <span style={{ fontSize: '1.5rem' }}>▶</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>No video available</p>
+                    )}
                     {isAdmin && (
                       <div
                         style={{ position: 'absolute', top: '0.4rem', right: '0.4rem', display: 'flex', gap: '0.3rem' }}

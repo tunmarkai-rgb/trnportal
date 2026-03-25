@@ -368,7 +368,7 @@ export default function MemberDirectory() {
                     fontWeight: 700, fontSize: '1rem', fontFamily: 'var(--font-display)',
                     flexShrink: 0,
                   }}>
-                    {m.full_name?.charAt(0)}
+                    {m.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.2rem', lineHeight: 1.3 }}>

@@ -261,6 +261,14 @@ export default function UpcomingCalls() {
                         borderRadius: '999px', letterSpacing: '0.04em', fontWeight: 500,
                       }}>{call.event_type}</span>
                     )}
+                    {call.open_to && (
+                      <span style={{
+                        background: 'var(--bg-primary)', color: 'var(--text-secondary)',
+                        border: '1px solid var(--border)',
+                        fontSize: '0.65rem', padding: '0.2rem 0.7rem',
+                        borderRadius: '999px', letterSpacing: '0.04em',
+                      }}>{call.open_to}</span>
+                    )}
                     {isAdmin && (
                       <>
                         <button onClick={() => openEdit(call)} style={iconBtn} title="Edit">✏</button>

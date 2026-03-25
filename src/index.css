@@ -82,3 +82,5 @@ a { text-decoration: none; color: inherit; }
 
 input::placeholder { color: var(--text-muted); }
 input:focus { border-color: var(--border-gold) !important; }
+textarea::placeholder { color: var(--text-muted); }
+textarea:focus { border-color: var(--border-gold) !important; outline: none; }

@@ -9,12 +9,13 @@ const navItems = [
   { icon: '📚', title: 'Education Hub', desc: 'Guides & resources', path: '/education' },
   { icon: '📝', title: 'Referral Templates', desc: 'Agreements & contracts', path: '/templates' },
   { icon: '💼', title: 'Deal Flow', desc: 'Track active referrals', path: '/deals' },
+  { icon: '👤', title: 'My Profile', desc: 'Edit your details', path: '/profile' },
   { icon: '📖', title: 'Getting Started', desc: 'Onboarding & orientation', path: '/onboarding' },
 ]
 
 export default function Dashboard() {
   const [memberName, setMemberName] = useState('')
-  const [userEmail, setUserEmail] = useState('')
+  const [userEmail, setUserEmail] = useState(null)
   const [calls, setCalls] = useState([])
   const [callsLoading, setCallsLoading] = useState(true)
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ export default function Dashboard() {
       const today = new Date().toISOString().split('T')[0]
       const { data: upcomingCalls } = await supabase
         .from('upcoming_calls')
-        .select('event_name, date, time, event_type')
+        .select('event_name, date, time, event_type, meeting_link')
         .gte('date', today)
         .order('date', { ascending: true })
         .limit(3)
@@ -139,6 +140,7 @@ export default function Dashboard() {
 
         {/* Nav Cards */}
         <p className="section-label">Quick Access</p>
+        {userEmail !== null && (
         <div className="nav-grid" style={{ marginBottom: '2.5rem' }}>
           {navItems.filter(item => item.path !== '/deals' || userEmail === 'jake@therealty-network.com').map((item, i) => (
             <Link
@@ -158,6 +160,7 @@ export default function Dashboard() {
             </Link>
           ))}
         </div>
+        )}
 
         {/* Upcoming Calls */}
         <p className="section-label">Upcoming Calls</p>
@@ -198,12 +201,18 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
-              <button style={{
-                background: 'var(--gold)', color: 'var(--bg-primary)',
-                fontSize: '0.7rem', fontWeight: 700,
-                padding: '0.4rem 0.9rem', borderRadius: '0.4rem',
-                border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0
-              }}>
+              <button
+                onClick={() => {
+                  if (call.meeting_link) window.open(call.meeting_link, '_blank', 'noopener,noreferrer')
+                  else navigate('/calls')
+                }}
+                style={{
+                  background: 'var(--gold)', color: 'var(--bg-primary)',
+                  fontSize: '0.7rem', fontWeight: 700,
+                  padding: '0.4rem 0.9rem', borderRadius: '0.4rem',
+                  border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0
+                }}
+              >
                 RSVP
               </button>
             </div>

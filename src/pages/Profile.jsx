@@ -37,6 +37,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarSaved, setAvatarSaved] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [userEmail, setUserEmail] = useState('')
@@ -86,6 +87,7 @@ export default function Profile() {
     const file = e.target.files[0]
     if (!file) return
     setAvatarUploading(true)
+    setAvatarSaved(false)
 
     const { data: { user } } = await supabase.auth.getUser()
     const ext = file.name.split('.').pop()
@@ -97,7 +99,10 @@ export default function Profile() {
 
     if (!uploadError) {
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName)
-      setForm(f => ({ ...f, avatar_url: urlData.publicUrl }))
+      const newUrl = urlData.publicUrl
+      await supabase.from('members').update({ avatar_url: newUrl }).eq('email', userEmail)
+      setForm(f => ({ ...f, avatar_url: newUrl }))
+      setAvatarSaved(true)
     }
     setAvatarUploading(false)
   }
@@ -122,7 +127,7 @@ export default function Profile() {
     setSaveError(null)
     setSaveSuccess(false)
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('members')
       .update({
         full_name: form.full_name,
@@ -141,9 +146,11 @@ export default function Profile() {
         avatar_url: form.avatar_url,
       })
       .eq('email', userEmail)
+      .select()
 
     if (error) setSaveError(error.message)
-    else setSaveSuccess(true)
+    else if (!data || data.length === 0) setSaveError('Profile not found. Contact an administrator.')
+    else { setSaveSuccess(true); setAvatarSaved(false) }
     setSaving(false)
   }
 
@@ -214,6 +221,11 @@ export default function Profile() {
           >
             {avatarUploading ? 'Uploading…' : 'Change Photo'}
           </button>
+          {avatarSaved && (
+            <p style={{ marginTop: '0.6rem', color: '#4caf50', fontSize: '0.75rem', textAlign: 'center' }}>
+              Photo saved — click Save Profile to update your other details.
+            </p>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

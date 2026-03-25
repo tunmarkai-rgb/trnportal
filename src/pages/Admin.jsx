@@ -28,7 +28,7 @@ function getVideoId(url) {
 
 const DEAL_STAGES = [
   'Lead', 'Prospect', 'Active', 'Negotiating',
-  'Under Contract', 'Closed', 'Commission Collected', 'Dead',
+  'Under Contract', 'Closed', 'Commission Collected', 'Completed', 'Dead',
 ]
 
 const CONTENT_CONFIG = {
@@ -56,6 +56,8 @@ const CONTENT_CONFIG = {
       { key: 'host',         label: 'Host',         type: 'text' },
       { key: 'event_type',   label: 'Event Type',   type: 'text' },
       { key: 'meeting_link', label: 'Meeting Link', type: 'text' },
+      { key: 'description',  label: 'Description',  type: 'textarea' },
+      { key: 'open_to',      label: 'Open To',      type: 'text', placeholder: 'e.g. All Members' },
     ],
   },
   education: {
@@ -77,10 +79,32 @@ const CONTENT_CONFIG = {
     fields:  [
       { key: 'name',          label: 'Name',          type: 'text' },
       { key: 'type',          label: 'Type',          type: 'text' },
+      { key: 'version',       label: 'Version',       type: 'text', placeholder: 'e.g. v1.0' },
       { key: 'download_link', label: 'Download Link', type: 'text' },
     ],
   },
 }
+
+const EMPTY_DEAL = {
+  deal_name: '', originating_agent: '', originating_country: '',
+  destination_agent: '', destination_country: '', property_type: '',
+  property_value_min: '', property_value_max: '', commission_percent: '',
+  stage: '', notes: '',
+}
+
+const DEAL_FIELDS = [
+  { key: 'deal_name',           label: 'Deal Name',           type: 'text' },
+  { key: 'originating_agent',   label: 'Originating Agent',   type: 'text' },
+  { key: 'originating_country', label: 'Originating Country', type: 'text' },
+  { key: 'destination_agent',   label: 'Destination Agent',   type: 'text' },
+  { key: 'destination_country', label: 'Destination Country', type: 'text' },
+  { key: 'property_type',       label: 'Property Type',       type: 'text' },
+  { key: 'property_value_min',  label: 'Min Value ($)',        type: 'number' },
+  { key: 'property_value_max',  label: 'Max Value ($)',        type: 'number' },
+  { key: 'commission_percent',  label: 'Commission %',         type: 'number' },
+  { key: 'stage',               label: 'Stage',               type: 'select' },
+  { key: 'notes',               label: 'Notes',               type: 'textarea' },
+]
 
 // ── Shared cell styles ─────────────────────────────────────────────────────────
 
@@ -138,6 +162,11 @@ export default function Admin() {
   const [dealsError,   setDealsError]   = useState(null)
   const [updatingDeal, setUpdatingDeal] = useState(null)
   const [dealMutationError, setDealMutationError] = useState('')
+  const [showDealModal,  setShowDealModal]  = useState(false)
+  const [dealForm,       setDealForm]       = useState(EMPTY_DEAL)
+  const [dealSaving,     setDealSaving]     = useState(false)
+  const [dealSaveError,  setDealSaveError]  = useState('')
+  const [deletingDealId, setDeletingDealId] = useState(null)
 
   // ── Data loaders ────────────────────────────────────────────────────────────
 
@@ -238,6 +267,30 @@ export default function Admin() {
     if (!error) setDeals(prev => prev.map(d => d.id === id ? { ...d, stage } : d))
     else setDealMutationError(`Stage update failed: ${error.message}`)
     setUpdatingDeal(null)
+  }
+
+  async function saveDeal() {
+    setDealSaving(true)
+    setDealSaveError('')
+    const { data, error } = await supabase.from('deals').insert([dealForm]).select()
+    if (!error && data) {
+      setDeals(prev => [...prev, data[0]])
+      setShowDealModal(false)
+      setDealForm(EMPTY_DEAL)
+    } else {
+      setDealSaveError(error?.message || 'Failed to save.')
+    }
+    setDealSaving(false)
+  }
+
+  async function deleteDeal(id) {
+    if (!window.confirm('Delete this deal?')) return
+    setDeletingDealId(id)
+    setDealMutationError('')
+    const { error } = await supabase.from('deals').delete().eq('id', id)
+    if (!error) setDeals(prev => prev.filter(d => d.id !== id))
+    else setDealMutationError(`Delete failed: ${error.message}`)
+    setDeletingDealId(null)
   }
 
   // ── Style helpers ────────────────────────────────────────────────────────────
@@ -562,7 +615,20 @@ export default function Admin() {
         ════════════════════════════════════════ */}
         {tab === 'deals' && (
           <>
-            <p className="section-label">All Deals</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <p className="section-label" style={{ margin: 0 }}>All Deals</p>
+              <button
+                onClick={() => { setDealForm(EMPTY_DEAL); setDealSaveError(''); setShowDealModal(true) }}
+                style={{
+                  background: 'var(--gold)', color: 'var(--bg-primary)',
+                  border: 'none', borderRadius: '0.4rem',
+                  padding: '0.4rem 1rem', fontSize: '0.75rem',
+                  fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)',
+                }}
+              >
+                + Add Deal
+              </button>
+            </div>
 
             {/* Mutation error */}
             {dealMutationError && (
@@ -583,12 +649,13 @@ export default function Admin() {
                       {['Deal Name', 'Originating Agent', 'Destination Agent', 'Stage'].map(h => (
                         <th key={h} style={TH}>{h}</th>
                       ))}
+                      <th style={{ ...TH, textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {deals.length === 0 ? (
                       <tr>
-                        <td colSpan={4} style={{ ...TD, textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <td colSpan={5} style={{ ...TD, textAlign: 'center', color: 'var(--text-muted)' }}>
                           No deals yet.
                         </td>
                       </tr>
@@ -612,6 +679,15 @@ export default function Admin() {
                             {!d.stage && <option value="">— set stage —</option>}
                             {DEAL_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
+                        </td>
+                        <td style={{ ...TD, textAlign: 'right' }}>
+                          <button
+                            onClick={() => deleteDeal(d.id)}
+                            disabled={deletingDealId === d.id}
+                            style={actionBtn('#e05a5a', deletingDealId === d.id)}
+                          >
+                            {deletingDealId === d.id ? '…' : 'Delete'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -718,6 +794,110 @@ export default function Admin() {
               }}
             >
               {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════
+          ADD DEAL MODAL
+      ════════════════════════════════════════ */}
+      {showDealModal && (
+        <div
+          onClick={() => setShowDealModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.88)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="card"
+            style={{ width: '100%', maxWidth: '480px', padding: '1.75rem', maxHeight: '90vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.05rem' }}>Add Deal</p>
+              <button
+                onClick={() => setShowDealModal(false)}
+                style={{
+                  background: 'transparent', border: '1px solid var(--border)',
+                  color: 'var(--text-muted)', width: '1.75rem', height: '1.75rem',
+                  borderRadius: '50%', cursor: 'pointer', fontSize: '0.9rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {DEAL_FIELDS.map(f => (
+                <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-body)' }}>
+                    {f.label}
+                  </label>
+                  {f.type === 'textarea' ? (
+                    <textarea
+                      rows={3}
+                      value={dealForm[f.key] || ''}
+                      onChange={e => setDealForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={{
+                        background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                        color: 'var(--text-primary)', borderRadius: '0.4rem',
+                        padding: '0.6rem 0.75rem', fontSize: '0.825rem',
+                        fontFamily: 'var(--font-body)', outline: 'none', resize: 'vertical',
+                      }}
+                    />
+                  ) : f.type === 'select' ? (
+                    <select
+                      value={dealForm[f.key] || ''}
+                      onChange={e => setDealForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={{
+                        background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                        color: 'var(--text-primary)', borderRadius: '0.4rem',
+                        padding: '0.6rem 0.75rem', fontSize: '0.825rem',
+                        fontFamily: 'var(--font-body)', outline: 'none',
+                      }}
+                    >
+                      <option value="">— select stage —</option>
+                      {DEAL_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type={f.type}
+                      placeholder={f.placeholder || ''}
+                      value={dealForm[f.key] || ''}
+                      onChange={e => setDealForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={{
+                        background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                        color: 'var(--text-primary)', borderRadius: '0.4rem',
+                        padding: '0.6rem 0.75rem', fontSize: '0.825rem',
+                        fontFamily: 'var(--font-body)', outline: 'none',
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            {dealSaveError && (
+              <div style={{ marginTop: '1rem' }}>
+                <ErrorCard message={dealSaveError} />
+              </div>
+            )}
+            <button
+              onClick={saveDeal}
+              disabled={dealSaving}
+              style={{
+                width: '100%', marginTop: '1.25rem',
+                background: dealSaving ? 'var(--gold-dim)' : 'var(--gold)',
+                color: 'var(--bg-primary)', border: 'none',
+                borderRadius: '0.5rem', padding: '0.75rem',
+                fontSize: '0.875rem', fontWeight: 700,
+                cursor: dealSaving ? 'not-allowed' : 'pointer',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              {dealSaving ? 'Saving…' : 'Add Deal'}
             </button>
           </div>
         </div>

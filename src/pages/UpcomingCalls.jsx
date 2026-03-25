@@ -9,6 +9,13 @@ const EMPTY_FORM = {
   event_type: '', meeting_link: '', description: '', open_to: '',
 }
 
+const EVENT_TYPES = ['Masterclass', 'Roundtable', 'Guest Speaker', 'Members Huddle', 'Ambassador Only']
+const OPEN_TO_OPTIONS = [
+  { value: 'all', label: 'All Members' },
+  { value: 'ambassadors_only', label: 'Ambassadors Only' },
+]
+const OPEN_TO_LABELS = { all: 'All Members', ambassadors_only: 'Ambassadors Only' }
+
 const inputStyle = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
   color: 'var(--text-primary)', borderRadius: '0.4rem',
@@ -28,10 +35,10 @@ const MODAL_FIELDS = [
   { key: 'date',         label: 'Date',         type: 'date' },
   { key: 'time',         label: 'Time',         type: 'time' },
   { key: 'host',         label: 'Host',         type: 'text' },
-  { key: 'event_type',   label: 'Event Type',   type: 'text', placeholder: 'e.g. Weekly Call, Webinar' },
+  { key: 'event_type',   label: 'Event Type',   type: 'select', options: EVENT_TYPES },
   { key: 'meeting_link', label: 'Meeting Link', type: 'text' },
   { key: 'description',  label: 'Description',  type: 'textarea' },
-  { key: 'open_to',      label: 'Open To',      type: 'text', placeholder: 'e.g. All Members' },
+  { key: 'open_to',      label: 'Open To',      type: 'select', options: OPEN_TO_OPTIONS },
 ]
 
 export default function UpcomingCalls() {
@@ -191,6 +198,18 @@ export default function UpcomingCalls() {
                       onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                       style={{ ...inputStyle, resize: 'vertical' }}
                     />
+                  ) : f.type === 'select' ? (
+                    <select
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value="">— select —</option>
+                      {(f.options || []).map(o => typeof o === 'string'
+                        ? <option key={o} value={o}>{o}</option>
+                        : <option key={o.value} value={o.value}>{o.label}</option>
+                      )}
+                    </select>
                   ) : (
                     <input
                       type={f.type}
@@ -270,7 +289,7 @@ export default function UpcomingCalls() {
                         border: '1px solid var(--border)',
                         fontSize: '0.65rem', padding: '0.2rem 0.7rem',
                         borderRadius: '999px', letterSpacing: '0.04em',
-                      }}>{call.open_to}</span>
+                      }}>{OPEN_TO_LABELS[call.open_to] || call.open_to}</span>
                     )}
                     {isAdmin && (
                       <>

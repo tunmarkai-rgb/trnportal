@@ -6,6 +6,8 @@ import ThemeToggle from '../components/ThemeToggle'
 const ADMIN_EMAIL = 'jake@therealty-network.com'
 const EMPTY_FORM = { title: '', category: '', host: '', date: '', duration: '', embed_url: '' }
 
+const VIDEO_CATEGORIES = ['Deal Structuring', 'Legal', 'Market Intelligence', 'Referral', 'Mindset', 'Guest Speaker', 'General']
+
 function getEmbedUrl(url) {
   if (!url) return ''
   if (url.includes('/embed/')) return url
@@ -248,7 +250,7 @@ export default function VideoLibrary() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
                 { key: 'title',     label: 'Title',       type: 'text' },
-                { key: 'category',  label: 'Category',    type: 'text' },
+                { key: 'category',  label: 'Category',    type: 'select', options: VIDEO_CATEGORIES },
                 { key: 'host',      label: 'Host',        type: 'text' },
                 { key: 'date',      label: 'Date',        type: 'date' },
                 { key: 'duration',  label: 'Duration',    type: 'text', placeholder: 'e.g. 45 min' },
@@ -256,13 +258,24 @@ export default function VideoLibrary() {
               ].map(f => (
                 <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-body)' }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    placeholder={f.placeholder || ''}
-                    value={form[f.key] || ''}
-                    onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    style={inputStyle}
-                  />
+                  {f.type === 'select' ? (
+                    <select
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value="">— select —</option>
+                      {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type={f.type}
+                      placeholder={f.placeholder || ''}
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    />
+                  )}
                 </div>
               ))}
             </div>

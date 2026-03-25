@@ -50,6 +50,16 @@ client/
 - referral_templates (name, type, version, download_link)
 - deals (deal_name, originating_agent, originating_country, destination_agent, destination_country, property_type, property_value_min, property_value_max, commission_percent, stage, notes)
 
+## Supabase Check Constraint Values (use exactly in selects/dropdowns)
+- members.role: Agent, Broker, Investor, Developer, Founder, Other
+- videos.category: Deal Structuring, Legal, Market Intelligence, Referral, Mindset, Guest Speaker, General
+- upcoming_calls.event_type: Masterclass, Roundtable, Guest Speaker, Members Huddle, Ambassador Only
+- upcoming_calls.open_to: all, ambassadors_only (display labels: "All Members", "Ambassadors Only")
+- education_hub.type: Market Report, Guide, Template, Script, Checklist
+- education_hub.category: Europe, Middle East, North America, Africa, Asia Pacific, Global, Legal, Finance
+- referral_templates.type: Residential, Commercial, Ambassador Collaboration, Off-Plan Developer
+- deals.stage: Lead, Prospect, Active, Negotiating, Under Contract, Closed, Commission Collected, Completed, Dead
+
 ## Supabase Storage
 - Bucket: "avatars" — stores member profile photos
 - Public URL stored in members.avatar_url column

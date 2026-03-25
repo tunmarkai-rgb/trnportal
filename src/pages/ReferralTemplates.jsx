@@ -6,6 +6,8 @@ import ThemeToggle from '../components/ThemeToggle'
 const ADMIN_EMAIL = 'jake@therealty-network.com'
 const EMPTY_FORM = { name: '', type: '', version: '', download_link: '' }
 
+const TEMPLATE_TYPES = ['Residential', 'Commercial', 'Ambassador Collaboration', 'Off-Plan Developer']
+
 const inputStyle = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
   color: 'var(--text-primary)', borderRadius: '0.4rem',
@@ -21,10 +23,10 @@ const iconBtn = {
 }
 
 const MODAL_FIELDS = [
-  { key: 'name',          label: 'Name',          placeholder: 'Template name' },
-  { key: 'type',          label: 'Type',          placeholder: 'e.g. Agreement, NDA' },
-  { key: 'version',       label: 'Version',       placeholder: 'e.g. v1.0' },
-  { key: 'download_link', label: 'Download Link', placeholder: 'https://…' },
+  { key: 'name',          label: 'Name',          type: 'text',   placeholder: 'Template name' },
+  { key: 'type',          label: 'Type',          type: 'select', options: TEMPLATE_TYPES },
+  { key: 'version',       label: 'Version',       type: 'text',   placeholder: 'e.g. v1.0' },
+  { key: 'download_link', label: 'Download Link', type: 'text',   placeholder: 'https://…' },
 ]
 
 export default function ReferralTemplates() {
@@ -178,13 +180,24 @@ export default function ReferralTemplates() {
               {MODAL_FIELDS.map(f => (
                 <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <label style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontFamily: 'var(--font-body)' }}>{f.label}</label>
-                  <input
-                    type="text"
-                    placeholder={f.placeholder || ''}
-                    value={form[f.key] || ''}
-                    onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    style={inputStyle}
-                  />
+                  {f.type === 'select' ? (
+                    <select
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value="">— select —</option>
+                      {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder={f.placeholder || ''}
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    />
+                  )}
                 </div>
               ))}
             </div>

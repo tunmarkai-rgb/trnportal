@@ -6,6 +6,9 @@ import ThemeToggle from '../components/ThemeToggle'
 const ADMIN_EMAIL = 'jake@therealty-network.com'
 const EMPTY_FORM = { title: '', type: '', category: '', file_link: '', description: '' }
 
+const EDU_TYPES = ['Market Report', 'Guide', 'Template', 'Script', 'Checklist']
+const EDU_CATEGORIES = ['Europe', 'Middle East', 'North America', 'Africa', 'Asia Pacific', 'Global', 'Legal', 'Finance']
+
 const inputStyle = {
   background: 'var(--bg-primary)', border: '1px solid var(--border)',
   color: 'var(--text-primary)', borderRadius: '0.4rem',
@@ -22,8 +25,8 @@ const iconBtn = {
 
 const MODAL_FIELDS = [
   { key: 'title',       label: 'Title',       type: 'text' },
-  { key: 'type',        label: 'Type',        type: 'text', placeholder: 'e.g. Guide, Video, Template' },
-  { key: 'category',    label: 'Category',    type: 'text' },
+  { key: 'type',        label: 'Type',        type: 'select', options: EDU_TYPES },
+  { key: 'category',    label: 'Category',    type: 'select', options: EDU_CATEGORIES },
   { key: 'file_link',   label: 'File Link',   type: 'text' },
   { key: 'description', label: 'Description', type: 'textarea' },
 ]
@@ -198,6 +201,15 @@ export default function EducationHub() {
                       onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                       style={{ ...inputStyle, resize: 'vertical' }}
                     />
+                  ) : f.type === 'select' ? (
+                    <select
+                      value={form[f.key] || ''}
+                      onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={inputStyle}
+                    >
+                      <option value="">— select —</option>
+                      {(f.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
                   ) : (
                     <input
                       type="text"

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import ThemeToggle from '../components/ThemeToggle'
 
+const ROLE_OPTIONS = ['Agent', 'Broker', 'Investor', 'Developer', 'Founder', 'Other']
+
 const NICHE_OPTIONS = [
   'Residential', 'Commercial', 'Luxury', 'Investment', 'Land',
   'New Developments', 'Short-Term Rentals', 'Property Management',
@@ -255,7 +257,10 @@ export default function Profile() {
 
           <div>
             <label style={labelStyle}>Role</label>
-            <input style={inputStyle} value={form.role} onChange={set('role')} placeholder="e.g. Buyer's Agent, Luxury Specialist" />
+            <select style={inputStyle} value={form.role} onChange={set('role')}>
+              <option value="">— select —</option>
+              {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
           </div>
 
           <div>

@@ -32,6 +32,13 @@ const DEAL_STAGES = [
   'Under Contract', 'Closed', 'Commission Collected', 'Completed', 'Dead',
 ]
 
+const VIDEO_CATEGORIES   = ['Deal Structuring', 'Legal', 'Market Intelligence', 'Referral', 'Mindset', 'Guest Speaker', 'General']
+const EVENT_TYPES        = ['Masterclass', 'Roundtable', 'Guest Speaker', 'Members Huddle', 'Ambassador Only']
+const OPEN_TO_OPTIONS    = [{ value: 'all', label: 'All Members' }, { value: 'ambassadors_only', label: 'Ambassadors Only' }]
+const EDU_TYPES          = ['Market Report', 'Guide', 'Template', 'Script', 'Checklist']
+const EDU_CATEGORIES     = ['Europe', 'Middle East', 'North America', 'Africa', 'Asia Pacific', 'Global', 'Legal', 'Finance']
+const TEMPLATE_TYPES     = ['Residential', 'Commercial', 'Ambassador Collaboration', 'Off-Plan Developer']
+
 const CONTENT_CONFIG = {
   videos: {
     table:   'videos',
@@ -39,7 +46,7 @@ const CONTENT_CONFIG = {
     columns: ['title', 'category', 'host', 'date', 'duration'],
     fields:  [
       { key: 'title',     label: 'Title',             type: 'text' },
-      { key: 'category',  label: 'Category',          type: 'text' },
+      { key: 'category',  label: 'Category',          type: 'select', options: VIDEO_CATEGORIES },
       { key: 'host',      label: 'Host',              type: 'text' },
       { key: 'date',      label: 'Date',              type: 'date' },
       { key: 'duration',  label: 'Duration',          type: 'text', placeholder: 'e.g. 45 min' },
@@ -55,10 +62,10 @@ const CONTENT_CONFIG = {
       { key: 'date',         label: 'Date',         type: 'date' },
       { key: 'time',         label: 'Time',         type: 'time' },
       { key: 'host',         label: 'Host',         type: 'text' },
-      { key: 'event_type',   label: 'Event Type',   type: 'text' },
+      { key: 'event_type',   label: 'Event Type',   type: 'select', options: EVENT_TYPES },
       { key: 'meeting_link', label: 'Meeting Link', type: 'text' },
       { key: 'description',  label: 'Description',  type: 'textarea' },
-      { key: 'open_to',      label: 'Open To',      type: 'text', placeholder: 'e.g. All Members' },
+      { key: 'open_to',      label: 'Open To',      type: 'select', options: OPEN_TO_OPTIONS },
     ],
   },
   education: {
@@ -67,8 +74,8 @@ const CONTENT_CONFIG = {
     columns: ['title', 'type', 'category'],
     fields:  [
       { key: 'title',       label: 'Title',       type: 'text' },
-      { key: 'type',        label: 'Type',        type: 'text' },
-      { key: 'category',    label: 'Category',    type: 'text' },
+      { key: 'type',        label: 'Type',        type: 'select', options: EDU_TYPES },
+      { key: 'category',    label: 'Category',    type: 'select', options: EDU_CATEGORIES },
       { key: 'file_link',   label: 'File Link',   type: 'text' },
       { key: 'description', label: 'Description', type: 'textarea' },
     ],
@@ -79,7 +86,7 @@ const CONTENT_CONFIG = {
     columns: ['name', 'type'],
     fields:  [
       { key: 'name',          label: 'Name',          type: 'text' },
-      { key: 'type',          label: 'Type',          type: 'text' },
+      { key: 'type',          label: 'Type',          type: 'select', options: TEMPLATE_TYPES },
       { key: 'version',       label: 'Version',       type: 'text', placeholder: 'e.g. v1.0' },
       { key: 'download_link', label: 'Download Link', type: 'text' },
     ],
@@ -758,6 +765,24 @@ export default function Admin() {
                         fontFamily: 'var(--font-body)', outline: 'none', resize: 'vertical',
                       }}
                     />
+                  ) : f.type === 'select' ? (
+                    <select
+                      value={newRow[f.key] || ''}
+                      onChange={e => setNewRow(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      style={{
+                        background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                        color: newRow[f.key] ? 'var(--text-primary)' : 'var(--text-muted)',
+                        borderRadius: '0.4rem', padding: '0.6rem 0.75rem',
+                        fontSize: '0.825rem', fontFamily: 'var(--font-body)',
+                        outline: 'none', width: '100%',
+                      }}
+                    >
+                      <option value="">— select —</option>
+                      {(f.options || []).map(o => typeof o === 'string'
+                        ? <option key={o} value={o}>{o}</option>
+                        : <option key={o.value} value={o.value}>{o.label}</option>
+                      )}
+                    </select>
                   ) : (
                     <input
                       type={f.type}

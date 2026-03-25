@@ -125,6 +125,7 @@ export default function Admin() {
   const [contentLoading, setContentLoading] = useState(false)
   const [contentError,   setContentError]   = useState(null)
   const [showModal,      setShowModal]      = useState(false)
+  const [editingRow,     setEditingRow]     = useState(null)
   const [newRow,         setNewRow]         = useState({})
   const [saving,         setSaving]         = useState(false)
   const [saveError,      setSaveError]      = useState('')
@@ -192,13 +193,28 @@ export default function Admin() {
     setSaving(true)
     setSaveError('')
     const cfg = CONTENT_CONFIG[contentSection]
-    const { data, error } = await supabase.from(cfg.table).insert([newRow]).select()
-    if (!error && data) {
-      setContentData(prev => ({ ...prev, [contentSection]: [data[0], ...prev[contentSection]] }))
-      setShowModal(false)
-      setNewRow({})
+    if (editingRow) {
+      const { error } = await supabase.from(cfg.table).update(newRow).eq('id', editingRow.id)
+      if (!error) {
+        setContentData(prev => ({
+          ...prev,
+          [contentSection]: prev[contentSection].map(r => r.id === editingRow.id ? { ...r, ...newRow } : r),
+        }))
+        setShowModal(false)
+        setEditingRow(null)
+        setNewRow({})
+      } else {
+        setSaveError(error.message || 'Failed to save.')
+      }
     } else {
-      setSaveError(error?.message || 'Failed to save. Check required fields.')
+      const { data, error } = await supabase.from(cfg.table).insert([newRow]).select()
+      if (!error && data) {
+        setContentData(prev => ({ ...prev, [contentSection]: [data[0], ...prev[contentSection]] }))
+        setShowModal(false)
+        setNewRow({})
+      } else {
+        setSaveError(error?.message || 'Failed to save. Check required fields.')
+      }
     }
     setSaving(false)
   }
@@ -443,7 +459,7 @@ export default function Admin() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <p className="section-label" style={{ margin: 0 }}>{cfg.label}</p>
               <button
-                onClick={() => { setNewRow({}); setShowModal(true) }}
+                onClick={() => { setEditingRow(null); setNewRow({}); setSaveError(''); setShowModal(true) }}
                 style={{
                   background: 'var(--gold)', color: 'var(--bg-primary)',
                   border: 'none', borderRadius: '0.4rem',
@@ -475,7 +491,7 @@ export default function Admin() {
                       {cfg.columns.map(c => (
                         <th key={c} style={TH}>{c.replace(/_/g, ' ')}</th>
                       ))}
-                      <th style={{ ...TH, textAlign: 'right' }}>Delete</th>
+                      <th style={{ ...TH, textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -509,13 +525,28 @@ export default function Admin() {
                           </td>
                         ))}
                         <td style={{ ...TD, textAlign: 'right' }}>
-                          <button
-                            onClick={() => deleteRow(row.id)}
-                            disabled={deletingId === row.id}
-                            style={actionBtn('#e05a5a', deletingId === row.id)}
-                          >
-                            {deletingId === row.id ? '…' : 'Delete'}
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => {
+                                const prefilled = {}
+                                cfg.fields.forEach(f => { prefilled[f.key] = row[f.key] ?? '' })
+                                setEditingRow(row)
+                                setNewRow(prefilled)
+                                setSaveError('')
+                                setShowModal(true)
+                              }}
+                              style={actionBtn('#d7a042', false)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteRow(row.id)}
+                              disabled={deletingId === row.id}
+                              style={actionBtn('#e05a5a', deletingId === row.id)}
+                            >
+                              {deletingId === row.id ? '…' : 'Delete'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -598,7 +629,7 @@ export default function Admin() {
       ════════════════════════════════════════ */}
       {showModal && (
         <div
-          onClick={() => setShowModal(false)}
+          onClick={() => { setShowModal(false); setEditingRow(null) }}
           style={{
             position: 'fixed', inset: 0, zIndex: 200,
             background: 'rgba(0,0,0,0.88)',
@@ -614,10 +645,10 @@ export default function Admin() {
             {/* Modal header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.05rem' }}>
-                Add {cfg.label}
+                {editingRow ? `Edit ${cfg.label}` : `Add ${cfg.label}`}
               </p>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setEditingRow(null) }}
                 style={{
                   background: 'transparent', border: '1px solid var(--border)',
                   color: 'var(--text-muted)', width: '1.75rem', height: '1.75rem',

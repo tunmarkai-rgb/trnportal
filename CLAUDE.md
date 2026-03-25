@@ -62,7 +62,7 @@ client/
 /calls — members
 /education — members
 /templates — members
-/deals — members
+/deals — admin only (jake@therealty-network.com); non-admins see access-restricted card
 /onboarding — members
 /profile — members (edit own profile + avatar upload)
 /admin — Jake only
@@ -81,6 +81,10 @@ client/
 - Fade-in animation via @keyframes fadeInUp injected via <style> tag
 - Close on X button or click outside overlay
 - Does NOT show: notes, status, bio
+
+## Admin-only pages
+- /deals — DealFlow.jsx checks getUser() email; isAdmin=null shows loader, isAdmin=false shows restricted card with back link, isAdmin=true shows full tracker. Deals fetch is skipped entirely for non-admins.
+- Dashboard.jsx filters the Deal Flow nav card out of navItems for non-admin users (userEmail !== 'jake@therealty-network.com')
 
 ## Jake Inline CRUD (jake@therealty-network.com only)
 All four content pages detect Jake's email via supabase.auth.getUser() and set isAdmin state.

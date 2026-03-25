@@ -140,7 +140,7 @@ export default function Dashboard() {
         {/* Nav Cards */}
         <p className="section-label">Quick Access</p>
         <div className="nav-grid" style={{ marginBottom: '2.5rem' }}>
-          {navItems.map((item, i) => (
+          {navItems.filter(item => item.path !== '/deals' || userEmail === 'jake@therealty-network.com').map((item, i) => (
             <Link
               key={i}
               to={item.path}

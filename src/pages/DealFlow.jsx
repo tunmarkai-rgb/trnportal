@@ -3,23 +3,33 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const CLOSED_STAGES = ['Closed', 'Commission Collected', 'Completed']
+const ADMIN_EMAIL = 'jake@therealty-network.com'
 
 export default function DealFlow() {
   const [deals, setDeals] = useState([])
   const [tab, setTab] = useState('pipeline')
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(null)
 
   useEffect(() => {
-    supabase
-      .from('deals')
-      .select('*')
-      .order('deal_name')
-      .then(({ data, error }) => {
-        if (error) { setFetchError(error.message); setLoading(false); return }
-        if (data) setDeals(data)
-        setLoading(false)
-      })
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      const admin = user?.email === ADMIN_EMAIL
+      setIsAdmin(admin)
+      if (!admin) { setLoading(false); return }
+
+      supabase
+        .from('deals')
+        .select('*')
+        .order('deal_name')
+        .then(({ data, error }) => {
+          if (error) { setFetchError(error.message); setLoading(false); return }
+          if (data) setDeals(data)
+          setLoading(false)
+        })
+    }
+    init()
   }, [])
 
   const pipeline = deals.filter(d => !CLOSED_STAGES.includes(d.stage))
@@ -44,6 +54,36 @@ export default function DealFlow() {
     borderRadius: active ? '0.5rem' : '0',
     transition: 'all 0.15s',
   })
+
+  if (isAdmin === null) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+      <p style={{ color: 'var(--gold)', fontFamily: 'var(--font-body)' }}>Loading…</p>
+    </div>
+  )
+
+  if (isAdmin === false) return (
+    <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <nav style={{
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        padding: '0.875rem 1.5rem', borderBottom: '1px solid var(--border)',
+        position: 'sticky', top: 0, zIndex: 50, background: 'var(--bg-primary)'
+      }}>
+        <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Deal Flow</span>
+      </nav>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <div className="card" style={{ padding: '2rem 1.5rem', textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.5rem' }}>Access restricted.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
+            This section is for administrators only.
+          </p>
+          <Link to="/dashboard" style={{ color: 'var(--gold)', fontSize: '0.875rem', fontWeight: 600 }}>
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh', paddingBottom: '4rem' }}>

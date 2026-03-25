@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 const NICHE_OPTIONS = [
   'Residential', 'Commercial', 'Luxury', 'Investment', 'Land',
@@ -179,6 +180,7 @@ export default function Profile() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>My Profile</span>
+        <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </nav>
 
       <div style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1rem' }}>

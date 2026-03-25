@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -367,15 +368,18 @@ export default function Admin() {
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.95rem', fontWeight: 600 }}>
           Admin Dashboard
         </span>
-        <Link
-          to="/dashboard"
-          style={{
-            marginLeft: 'auto', color: 'var(--text-muted)',
-            fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
-          }}
-        >
-          ← Dashboard
-        </Link>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <ThemeToggle />
+          <Link
+            to="/dashboard"
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
+            }}
+          >
+            ← Dashboard
+          </Link>
+        </div>
       </nav>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.75rem 1rem' }}>

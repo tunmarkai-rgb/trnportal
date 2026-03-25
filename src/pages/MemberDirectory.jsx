@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 function MemberModal({ member, onClose }) {
   const initials = member.full_name
@@ -290,11 +291,14 @@ export default function MemberDirectory() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Member Directory</span>
-        {!loading && (
-          <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-            {filtered.length} member{filtered.length !== 1 ? 's' : ''}
-          </span>
-        )}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {!loading && (
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              {filtered.length} member{filtered.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          <ThemeToggle />
+        </div>
       </nav>
 
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>

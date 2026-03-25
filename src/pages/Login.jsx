@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -41,6 +42,9 @@ export default function Login() {
       justifyContent: 'center',
       padding: '2rem 1rem',
     }}>
+      <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 50 }}>
+        <ThemeToggle />
+      </div>
 
       {/* Logo — above the card */}
       <div style={{

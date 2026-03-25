@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 const navItems = [
   { icon: '👥', title: 'Member Directory', desc: 'Find agents worldwide', path: '/directory' },
@@ -69,16 +70,19 @@ export default function Dashboard() {
         position: 'sticky', top: 0, zIndex: 50, background: 'var(--bg-primary)'
       }}>
         <img src="/logo.png" alt="TRN" style={{ height: '1.75rem', width: 'auto' }} />
-        <button
-          onClick={handleSignOut}
-          style={{
-            background: 'var(--bg-card)', color: 'var(--gold)', border: '1px solid var(--border)',
-            padding: '0.35rem 0.9rem', borderRadius: '0.5rem', fontSize: '0.75rem',
-            cursor: 'pointer', fontFamily: 'var(--font-body)'
-          }}
-        >
-          Sign Out
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <ThemeToggle />
+          <button
+            onClick={handleSignOut}
+            style={{
+              background: 'var(--bg-card)', color: 'var(--gold)', border: '1px solid var(--border)',
+              padding: '0.35rem 0.9rem', borderRadius: '0.5rem', fontSize: '0.75rem',
+              cursor: 'pointer', fontFamily: 'var(--font-body)'
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
       </nav>
 
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>

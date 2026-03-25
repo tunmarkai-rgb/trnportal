@@ -145,6 +145,26 @@ Admin.jsx Content tab shows 80x45px thumbnail preview column for videos section.
 - referral_templates: version (text)
 - deals: originating_country (text), destination_country (text), property_type (text), property_value_min (numeric), property_value_max (numeric), commission_percent (numeric), notes (text)
 
+## Theme System
+- `src/lib/theme.js` — exports getTheme(), setTheme(theme), initTheme()
+  - getTheme(): returns 'dark' | 'light' from localStorage, defaults to 'dark'
+  - setTheme(theme): saves to localStorage and adds/removes 'light' class on <html>
+  - initTheme(): called in main.jsx before React renders to avoid flash of wrong theme
+- `src/components/ThemeToggle.jsx` — 32×32 circular icon button, ☀️ in dark mode, 🌙 in light mode
+  - Reads theme from localStorage on mount via useEffect
+  - Calls setTheme() + updates local state on click
+- Light theme applied via `html.light { ... }` CSS variable overrides in index.css
+  - Light overrides: --bg-primary #f8f6f1, --bg-card #ffffff, --bg-warm #f0ead8, --bg-hover #ece6d9
+  - Gold shifts to #b8860b (darker for contrast on light backgrounds)
+  - Scrollbar thumb lightened to #ccc in light mode
+- ThemeToggle placed in every page nav bar:
+  - Dashboard: before Sign Out button (both in a flex wrapper)
+  - Admin: in a right-side flex group with ← Dashboard link
+  - Content pages (VideoLibrary, UpcomingCalls, EducationHub, ReferralTemplates): in a right-side flex group before the isAdmin "+ Add" button
+  - MemberDirectory: in a right-side flex group with the member count span
+  - DealFlow, Profile, Onboarding: marginLeft auto wrapper at nav right end
+  - Login: position fixed top-right corner
+
 ## Rules
 - Mobile first, always
 - No separate backend server

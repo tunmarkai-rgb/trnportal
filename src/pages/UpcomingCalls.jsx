@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 const ADMIN_EMAIL = 'jake@therealty-network.com'
 const EMPTY_FORM = {
@@ -129,20 +130,22 @@ export default function UpcomingCalls() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Upcoming Calls</span>
-        {isAdmin && (
-          <button
-            onClick={openAdd}
-            style={{
-              marginLeft: 'auto',
-              background: 'var(--gold)', color: 'var(--bg-primary)',
-              border: 'none', borderRadius: '0.4rem',
-              padding: '0.4rem 0.9rem', fontSize: '0.75rem',
-              fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)',
-            }}
-          >
-            + Add Call
-          </button>
-        )}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <ThemeToggle />
+          {isAdmin && (
+            <button
+              onClick={openAdd}
+              style={{
+                background: 'var(--gold)', color: 'var(--bg-primary)',
+                border: 'none', borderRadius: '0.4rem',
+                padding: '0.4rem 0.9rem', fontSize: '0.75rem',
+                fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)',
+              }}
+            >
+              + Add Call
+            </button>
+          )}
+        </div>
       </nav>
 
       {/* Add / Edit modal */}

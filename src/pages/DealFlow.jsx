@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ThemeToggle from '../components/ThemeToggle'
 
 const CLOSED_STAGES = ['Closed', 'Commission Collected', 'Completed']
 const ADMIN_EMAIL = 'jake@therealty-network.com'
@@ -70,6 +71,7 @@ export default function DealFlow() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Deal Flow</span>
+        <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </nav>
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>
         <div className="card" style={{ padding: '2rem 1.5rem', textAlign: 'center' }}>
@@ -95,6 +97,7 @@ export default function DealFlow() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Deal Flow</span>
+        <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </nav>
 
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 
 const steps = [
   {
@@ -58,6 +59,7 @@ export default function Onboarding() {
       }}>
         <Link to="/dashboard" style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}>←</Link>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600 }}>Getting Started</span>
+        <div style={{ marginLeft: 'auto' }}><ThemeToggle /></div>
       </nav>
 
       <div style={{ maxWidth: '760px', margin: '0 auto', padding: '2rem 1rem' }}>

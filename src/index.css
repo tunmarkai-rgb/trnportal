@@ -84,3 +84,22 @@ input::placeholder { color: var(--text-muted); }
 input:focus { border-color: var(--border-gold) !important; }
 textarea::placeholder { color: var(--text-muted); }
 textarea:focus { border-color: var(--border-gold) !important; outline: none; }
+
+/* ── Light theme ──────────────────────────────────────────────────────────── */
+html.light {
+  --bg-primary: #f8f6f1;
+  --bg-card: #ffffff;
+  --bg-hover: #ece6d9;
+  --bg-warm: #f0ead8;
+  --border: #e0d9cc;
+  --border-gold: #d7a04260;
+  --gold: #b8860b;
+  --gold-dim: #b8860b20;
+  --text-primary: #1a1a1a;
+  --text-secondary: #444444;
+  --text-muted: #888888;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+html.light ::-webkit-scrollbar-thumb { background: #ccc; }

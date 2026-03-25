@@ -10,6 +10,7 @@ import EducationHub from './pages/EducationHub'
 import ReferralTemplates from './pages/ReferralTemplates'
 import DealFlow from './pages/DealFlow'
 import Onboarding from './pages/Onboarding'
+import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
         <Route path="/templates"  element={auth(<ReferralTemplates />)} />
         <Route path="/deals"      element={auth(<DealFlow />)} />
         <Route path="/onboarding" element={auth(<Onboarding />)} />
+        <Route path="/profile"    element={auth(<Profile />)} />
         <Route path="/admin"      element={adminOnly} />
         <Route path="*"           element={<Navigate to={session ? '/dashboard' : '/login'} />} />
       </Routes>

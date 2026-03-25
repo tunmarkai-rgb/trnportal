@@ -93,6 +93,36 @@ export default function Onboarding() {
           </p>
         </div>
 
+        {/* Profile Callout */}
+        <div className="card" style={{
+          padding: '1.25rem 1.5rem',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: '1rem',
+          marginBottom: '1.25rem', flexWrap: 'wrap',
+          borderColor: 'var(--border-gold)',
+          background: 'linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-card) 100%)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <span style={{ fontSize: '1.75rem' }}>👤</span>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.2rem' }}>Complete Your Profile</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Add your photo and contact details so other members can find and reach you.</p>
+            </div>
+          </div>
+          <Link
+            to="/profile"
+            style={{
+              background: 'var(--gold)', color: 'var(--bg-primary)',
+              fontSize: '0.75rem', fontWeight: 700,
+              padding: '0.5rem 1.25rem', borderRadius: '0.4rem',
+              whiteSpace: 'nowrap', flexShrink: 0,
+              letterSpacing: '0.04em',
+            }}
+          >
+            Update My Profile →
+          </Link>
+        </div>
+
         {/* WhatsApp CTA */}
         <div className="card" style={{
           padding: '1.25rem 1.5rem',

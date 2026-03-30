@@ -12,6 +12,7 @@ import DealFlow from './pages/DealFlow'
 import Onboarding from './pages/Onboarding'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
+import CommunityJoin from './pages/CommunityJoin'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -57,6 +58,7 @@ function App() {
         <Route path="/onboarding" element={auth(<Onboarding />)} />
         <Route path="/profile"    element={auth(<Profile />)} />
         <Route path="/admin"      element={adminOnly} />
+        <Route path="/join"       element={<CommunityJoin />} />
         <Route path="*"           element={<Navigate to={session ? '/dashboard' : '/login'} />} />
       </Routes>
     </BrowserRouter>

@@ -176,6 +176,15 @@ export default function Admin() {
   const [dealSaveError,  setDealSaveError]  = useState('')
   const [deletingDealId, setDeletingDealId] = useState(null)
 
+  // Community
+  const [communityMembers,      setCommunityMembers]      = useState([])
+  const [communityFilter,       setCommunityFilter]       = useState('all')
+  const [communityLoading,      setCommunityLoading]      = useState(false)
+  const [communityError,        setCommunityError]        = useState(null)
+  const [updatingCommunity,     setUpdatingCommunity]     = useState(null)
+  const [communityMutationError,setCommunityMutationError]= useState('')
+  const [copiedId,              setCopiedId]              = useState(null)
+
   // ── Data loaders ────────────────────────────────────────────────────────────
 
   useEffect(() => { loadMembers() }, [])
@@ -183,6 +192,7 @@ export default function Admin() {
   useEffect(() => {
     if (tab === 'content') loadContent(contentSection)
     if (tab === 'deals' && deals.length === 0) loadDeals()
+    if (tab === 'community' && communityMembers.length === 0) loadCommunity()
   }, [tab, contentSection])
 
   async function loadMembers() {
@@ -213,6 +223,33 @@ export default function Admin() {
     if (error) setDealsError(error.message)
     else if (data) setDeals(data)
     setDealsLoading(false)
+  }
+
+  async function loadCommunity() {
+    setCommunityLoading(true)
+    setCommunityError(null)
+    const { data, error } = await supabase
+      .from('community_members')
+      .select('id, first_name, last_name, whatsapp, country, role, instagram, form_submitted_at, status')
+      .order('form_submitted_at', { ascending: false })
+    if (error) setCommunityError(error.message)
+    else if (data) setCommunityMembers(data)
+    setCommunityLoading(false)
+  }
+
+  async function updateCommunityStatus(id, status) {
+    setUpdatingCommunity(id)
+    setCommunityMutationError('')
+    const { error } = await supabase.from('community_members').update({ status }).eq('id', id)
+    if (!error) setCommunityMembers(prev => prev.map(m => m.id === id ? { ...m, status } : m))
+    else setCommunityMutationError(`Update failed: ${error.message}`)
+    setUpdatingCommunity(null)
+  }
+
+  function copyWhatsApp(id, whatsapp) {
+    navigator.clipboard.writeText(whatsapp)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
   }
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -359,6 +396,15 @@ export default function Admin() {
   const cfg            = CONTENT_CONFIG[contentSection]
   const currentContent = contentData[contentSection] || []
 
+  const communityCounts = {
+    all:     communityMembers.length,
+    active:  communityMembers.filter(m => m.status === 'active').length,
+    removed: communityMembers.filter(m => m.status === 'removed').length,
+  }
+  const visibleCommunity = communityFilter === 'all'
+    ? communityMembers
+    : communityMembers.filter(m => m.status === communityFilter)
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -393,7 +439,7 @@ export default function Admin() {
 
         {/* ── Main tabs ── */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          {['members', 'content', 'deals'].map(t => (
+          {['members', 'content', 'community', 'deals'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={mainTab(tab === t)}>
               {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
@@ -610,6 +656,123 @@ export default function Admin() {
                             >
                               {deletingId === row.id ? '…' : 'Delete'}
                             </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ════════════════════════════════════════
+            COMMUNITY TAB
+        ════════════════════════════════════════ */}
+        {tab === 'community' && (
+          <>
+            {/* Stat row */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              {[
+                ['Total',   communityCounts.all,     'var(--text-primary)'],
+                ['Active',  communityCounts.active,  '#4caf50'],
+                ['Removed', communityCounts.removed, '#e05a5a'],
+              ].map(([label, count, color]) => (
+                <div key={label} className="card" style={{ padding: '0.875rem 1.5rem', minWidth: '5.5rem', textAlign: 'center' }}>
+                  <p style={{ color, fontSize: '1.5rem', fontWeight: 700, fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                    {count}
+                  </p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '0.3rem' }}>
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter pills */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              {['all', 'active', 'removed'].map(f => (
+                <button key={f} onClick={() => setCommunityFilter(f)} style={filterPill(communityFilter === f)}>
+                  {f} ({communityCounts[f]})
+                </button>
+              ))}
+            </div>
+
+            {/* Mutation error */}
+            {communityMutationError && (
+              <div style={{ marginBottom: '1rem' }}>
+                <ErrorCard message={communityMutationError} />
+              </div>
+            )}
+
+            {communityLoading ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading community members…</p>
+            ) : communityError ? (
+              <ErrorCard message={communityError} />
+            ) : (
+              <div style={{ overflowX: 'auto', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
+                  <thead>
+                    <tr>
+                      {['Name', 'WhatsApp', 'Country', 'Role', 'Instagram', 'Joined', 'Status', 'Actions'].map(h => (
+                        <th key={h} style={TH}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleCommunity.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ ...TD, textAlign: 'center', color: 'var(--text-muted)' }}>
+                          No community members yet. Share your /join link to get started.
+                        </td>
+                      </tr>
+                    ) : visibleCommunity.map(m => (
+                      <tr key={m.id} style={{ background: 'var(--bg-card)' }}>
+                        <td style={{ ...TD, fontWeight: 600 }}>{m.first_name} {m.last_name}</td>
+                        <td style={{ ...TD, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{m.whatsapp}</td>
+                        <td style={{ ...TD, color: 'var(--text-muted)' }}>{m.country || '—'}</td>
+                        <td style={{ ...TD, color: 'var(--text-muted)' }}>{m.role || '—'}</td>
+                        <td style={{ ...TD, color: 'var(--text-muted)' }}>{m.instagram || '—'}</td>
+                        <td style={{ ...TD, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {m.form_submitted_at
+                            ? new Date(m.form_submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : '—'}
+                        </td>
+                        <td style={TD}>
+                          <span style={{
+                            fontSize: '0.65rem', padding: '0.15rem 0.6rem',
+                            borderRadius: '999px', textTransform: 'capitalize',
+                            color:      m.status === 'active' ? '#4caf50' : '#e05a5a',
+                            background: m.status === 'active' ? '#4caf5018' : '#e05a5a18',
+                            border: '1px solid ' + (m.status === 'active' ? '#4caf5040' : '#e05a5a40'),
+                          }}>{m.status}</span>
+                        </td>
+                        <td style={TD}>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => copyWhatsApp(m.id, m.whatsapp)}
+                              style={actionBtn('#d7a042', false)}
+                            >
+                              {copiedId === m.id ? 'Copied!' : 'Copy WA'}
+                            </button>
+                            {m.status === 'active' ? (
+                              <button
+                                onClick={() => updateCommunityStatus(m.id, 'removed')}
+                                disabled={updatingCommunity === m.id}
+                                style={actionBtn('#e05a5a', updatingCommunity === m.id)}
+                              >
+                                {updatingCommunity === m.id ? '…' : 'Remove'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => updateCommunityStatus(m.id, 'active')}
+                                disabled={updatingCommunity === m.id}
+                                style={actionBtn('#4caf50', updatingCommunity === m.id)}
+                              >
+                                {updatingCommunity === m.id ? '…' : 'Restore'}
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

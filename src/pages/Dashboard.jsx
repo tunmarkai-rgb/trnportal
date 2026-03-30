@@ -120,26 +120,51 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Admin button — Jake only */}
+        {/* Admin buttons — Jake only */}
         {userEmail === 'jake@therealty-network.com' && (
-          <Link
-            to="/admin"
-            style={{
-              display: 'block',
-              width: '100%',
-              background: 'var(--gold)',
-              color: 'var(--bg-primary)',
-              textAlign: 'center',
-              padding: '0.875rem 2rem',
-              borderRadius: '0.75rem',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              letterSpacing: '0.04em',
-              marginBottom: '2.5rem',
-            }}
-          >
-            Admin Dashboard →
-          </Link>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2.5rem' }}>
+            <Link
+              to="/admin"
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'var(--gold)',
+                color: 'var(--bg-primary)',
+                textAlign: 'center',
+                padding: '0.875rem 2rem',
+                borderRadius: '0.75rem',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                letterSpacing: '0.04em',
+              }}
+            >
+              Admin Dashboard →
+            </Link>
+            <div className="card" style={{
+              padding: '1rem 1.25rem',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap',
+            }}>
+              <div>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.2rem' }}>Community Join Link</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontFamily: 'var(--font-body)' }}>
+                  {window.location.origin}/join
+                </p>
+              </div>
+              <button
+                onClick={() => navigator.clipboard.writeText(window.location.origin + '/join')}
+                style={{
+                  background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                  color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 600,
+                  padding: '0.4rem 1rem', borderRadius: '0.4rem',
+                  cursor: 'pointer', fontFamily: 'var(--font-body)',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                Copy Link
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Nav Cards */}

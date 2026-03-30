@@ -42,6 +42,11 @@ client/
 - .nav-card — clickable navigation card
 - textarea::placeholder and textarea:focus styles match input equivalents
 
+## Two-Tier Membership System
+- **Paid portal members** — authenticated via Supabase Auth, stored in `members` table, access all portal routes
+- **Free community members** — no login, join via public /join form, stored in `community_members` table, receive WhatsApp group link manually from Jake
+- These are completely separate systems with no overlap
+
 ## Supabase Tables
 - members (full_name, email, country, city, role, niche[], status, avatar_url, agency, languages[], can_help_with, looking_for, whatsapp, instagram, linkedin, bio, notes)
 - videos (title, category, host, date, duration, embed_url)
@@ -49,6 +54,7 @@ client/
 - education_hub (title, type, category, file_link, description)
 - referral_templates (name, type, version, download_link)
 - deals (deal_name, originating_agent, originating_country, destination_agent, destination_country, property_type, property_value_min, property_value_max, commission_percent, stage, notes)
+- community_members (id, created_at, first_name, last_name, email, whatsapp, country, city, role, instagram, linkedin, how_did_you_hear, status, form_submitted_at, removal_scheduled_at, notes)
 
 ## Supabase Check Constraint Values (use exactly in selects/dropdowns)
 - members.role: Agent, Broker, Investor, Developer, Founder, Other
@@ -68,6 +74,7 @@ client/
 
 ## Routes
 /login — public
+/join — public (no auth); community member signup form → inserts into community_members
 /dashboard — members
 /directory — members
 /videos — members
@@ -100,6 +107,7 @@ client/
 - navItems includes: Member Directory, Video Library, Upcoming Calls, Education Hub, Referral Templates, Deal Flow (admin only), My Profile, Getting Started
 - Deal Flow card filtered out for non-admins: navItems.filter(item => item.path !== '/deals' || userEmail === ADMIN_EMAIL)
 - Dashboard upcoming calls select includes meeting_link; RSVP button opens meeting_link in new tab or navigates to /calls if no link
+- Jake-only admin section: "Admin Dashboard →" button + "Community Join Link" card showing {origin}/join with a "Copy Link" button
 
 ## Admin-only pages
 - /deals — DealFlow.jsx checks getUser() email; isAdmin=null shows loader, isAdmin=false shows restricted card with back link, isAdmin=true shows full tracker. Deals fetch is skipped entirely for non-admins.
@@ -123,6 +131,17 @@ Regular members see NO add/edit/delete controls.
 - templates fields: name, type, version, download_link
 - educaton fields: title, type, category, file_link, description (textarea)
 - videos fields: title, category, host, date, duration, embed_url
+
+## Admin.jsx — Community Tab
+- Fourth main tab, between Content and Deals
+- Loads from community_members table; only fetched when tab first activated
+- Stat cards: Total, Active, Removed
+- Filter pills: all, active, removed (with counts)
+- Table columns: Name, WhatsApp, Country, Role, Instagram, Joined, Status, Actions
+- Actions per row: "Copy WA" (copies whatsapp to clipboard, shows "Copied!" for 1.5s), "Remove" (sets status=removed) or "Restore" (sets status=active) depending on current status
+- Empty state: "No community members yet. Share your /join link to get started."
+- copiedId state tracks which row's button shows "Copied!" feedback
+- 48-hour removal rule: manual for now (Jake removes manually); automated webhook via n8n planned for future
 
 ## Admin.jsx — Deals Tab
 - Lists all deals with stage dropdown (inline edit) and Delete button per row
@@ -149,6 +168,18 @@ Admin.jsx Content tab shows 80x45px thumbnail preview column for videos section.
 - WHATSAPP_LINK is a placeholder: '#NOTE_FOR_JAKE_replace_with_real_whatsapp_link' — must be replaced
 - Step 01 has link: '/profile' and linkLabel: 'Update My Profile →'
 - Step renderer handles step.action === true by rendering <a> to WHATSAPP_LINK
+
+## CommunityJoin.jsx (/join)
+- Fully public — no Supabase auth required, uses anon key for INSERT only
+- Fields: first_name (req), last_name (req), whatsapp (req), email, country (req), city, role (select, req), instagram, linkedin, how_did_you_hear
+- On success: shows thank-you message; no redirect
+- Footer: "Already a paying member? Sign in here" → /login
+- No ThemeToggle (public page, keep it simple)
+- RLS: anon INSERT allowed; jake authenticated SELECT/UPDATE/DELETE
+
+## community_members RLS Policies
+- Policy "anon_insert_community": INSERT for anon role, with check (true)
+- Policy "jake_manage_community": ALL for authenticated, using/with check (auth.jwt() ->> 'email' = 'jake@therealty-network.com')
 
 ## Supabase columns required (add in dashboard if not present)
 - upcoming_calls: description (text), open_to (text)

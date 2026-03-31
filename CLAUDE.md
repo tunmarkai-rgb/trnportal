@@ -206,6 +206,10 @@ Admin.jsx Content tab shows 80x45px thumbnail preview column for videos section.
   - DealFlow, Profile, Onboarding: marginLeft auto wrapper at nav right end
   - Login: position fixed top-right corner
 
+## WhatsApp Links
+- Paid members group: https://chat.whatsapp.com/I0ujof3J8Xe15md9XThwfV — used in Onboarding.jsx (WHATSAPP_LINK constant)
+- Free community group: https://chat.whatsapp.com/Gm1sPJ7B0NcF1HrjXuukXx — used in CommunityJoin.jsx success screen button
+
 ## Rules
 - Mobile first, always
 - No separate backend server

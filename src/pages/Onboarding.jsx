@@ -45,8 +45,7 @@ const steps = [
   },
 ]
 
-// NOTE_FOR_JAKE: Replace this string with your real WhatsApp group invite URL
-const WHATSAPP_LINK = '#NOTE_FOR_JAKE_replace_with_real_whatsapp_link'
+const WHATSAPP_LINK = 'https://chat.whatsapp.com/I0ujof3J8Xe15md9XThwfV'
 
 export default function Onboarding() {
   return (

@@ -134,9 +134,27 @@ export default function CommunityJoin() {
             }}>
               You're in!
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.7 }}>
-              Welcome to the community. You will receive the WhatsApp group link shortly.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+              Welcome to the community. Click below to join the WhatsApp group.
             </p>
+            <a
+              href="https://chat.whatsapp.com/Gm1sPJ7B0NcF1HrjXuukXx"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                background: 'var(--gold)',
+                color: 'var(--bg-primary)',
+                fontFamily: 'var(--font-body)',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                padding: '0.75rem 1.75rem',
+                borderRadius: '0.6rem',
+                letterSpacing: '0.04em',
+              }}
+            >
+              Join WhatsApp Community →
+            </a>
           </div>
         ) : (
           <>
